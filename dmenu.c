@@ -562,7 +562,14 @@ insert:
 		if (lines > 0)
 			return;
 		/* fallthrough */
-	case XK_Up:
+  case XK_Up:
+  
+    // wrap
+    if ( sel && !sel->left ) {
+      sel = matchend;
+      break;
+    }
+  
 		if (sel && sel->left && (sel = sel->left)->right == curr) {
 			curr = prev;
 			calcoffsets();
@@ -599,11 +606,20 @@ insert:
 			return;
 		/* fallthrough */
 	case XK_Down:
+    
+    // wrap around up
+    if ( sel && !sel->right ) {
+      sel = curr = matches;
+      break;
+    }
+    
 		if (sel && sel->right && (sel = sel->right) == next) {
 			curr = next;
 			calcoffsets();
-		}
-		break;
+      break;
+    }
+		
+    break;
 	case XK_Tab:
 		if (!sel)
 			return;
@@ -777,7 +793,7 @@ setup(void)
 	swa.override_redirect = True;
 	swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
 	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask;
-	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, 2,
+	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, 3,
 	                    CopyFromParent, CopyFromParent, CopyFromParent,
 	                    CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);
 	XSetWindowBorder(dpy, win, scheme[SchemeSel][ColBg].pixel);
