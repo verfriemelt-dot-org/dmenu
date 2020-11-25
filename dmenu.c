@@ -590,6 +590,18 @@ insert:
     // wrap
     if ( sel && !sel->left ) {
       sel = matchend;
+      
+      if (next) {
+        /* jump to end of list and position items in reverse */
+        curr = matchend;
+        calcoffsets();
+        curr = prev;
+        calcoffsets();
+        while (next && (curr = curr->right))
+          calcoffsets();
+      }
+
+      calcoffsets();
       break;
     }
 
@@ -637,6 +649,7 @@ insert:
     // wrap around up
     if ( sel && !sel->right ) {
       sel = curr = matches;
+      calcoffsets();
       break;
     }
 
