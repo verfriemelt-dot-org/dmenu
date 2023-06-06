@@ -587,11 +587,11 @@ insert:
 			return;
 		/* fallthrough */
   case XK_Up:
-  
+
     // wrap
     if ( sel && !sel->left ) {
       sel = matchend;
-      
+
       if (next) {
         /* jump to end of list and position items in reverse */
         curr = matchend;
@@ -605,7 +605,7 @@ insert:
       calcoffsets();
       break;
     }
-  
+
 		if (sel && sel->left && (sel = sel->left)->right == curr) {
 			curr = prev;
 			calcoffsets();
@@ -645,20 +645,20 @@ insert:
 			return;
 		/* fallthrough */
 	case XK_Down:
-    
+
     // wrap around up
     if ( sel && !sel->right ) {
       sel = curr = matches;
       calcoffsets();
       break;
     }
-    
+
 		if (sel && sel->right && (sel = sel->right) == next) {
 			curr = next;
 			calcoffsets();
       break;
     }
-		
+
     break;
 	case XK_Tab:
 		if (!sel)
@@ -696,11 +696,11 @@ static void
 readstdin(void)
 {
 	char *line = NULL;
-	size_t i, junk, itemsiz = 0;
+	size_t i, itemsiz = 0, linesiz = 0;
 	ssize_t len;
 
 	/* read each line from stdin and add it to the item list */
-	for (i = 0; (len = getline(&line, &junk, stdin)) != -1; i++) {
+	for (i = 0; (len = getline(&line, &linesiz, stdin)) != -1; i++) {
 		if (i + 1 >= itemsiz) {
 			itemsiz += 256;
 			if (!(items = realloc(items, itemsiz * sizeof(*items))))
@@ -708,9 +708,10 @@ readstdin(void)
 		}
 		if (line[len - 1] == '\n')
 			line[len - 1] = '\0';
-		items[i].text = line;
+		if (!(items[i].text = strdup(line)))
+			die("strdup:");
+
 		items[i].out = 0;
-		line = NULL; /* next call of getline() allocates a new line */
 	}
 	free(line);
 	if (items)
@@ -830,7 +831,7 @@ setup(void)
 	swa.override_redirect = True;
 	swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
 	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask;
-	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, 3,
+	win = XCreateWindow(dpy, root, x, y, mw, mh, 3,
 	                    CopyFromParent, CopyFromParent, CopyFromParent,
 	                    CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);
 	XSetWindowBorder(dpy, win, scheme[SchemeSel][ColBg].pixel);
@@ -846,6 +847,7 @@ setup(void)
 
 	XMapRaised(dpy, win);
 	if (embed) {
+		XReparentWindow(dpy, win, parentwin, x, y);
 		XSelectInput(dpy, parentwin, FocusChangeMask | SubstructureNotifyMask);
 		if (XQueryTree(dpy, parentwin, &dw, &w, &dws, &du) && dws) {
 			for (i = 0; i < du && dws[i] != win; ++i)
